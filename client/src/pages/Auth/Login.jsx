@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
 import RadioGroup from "../../components/RadioGroup";
@@ -12,6 +12,12 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated, role: authRole } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(`/${authRole}`, { replace: true } );
+    }
+  });
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -66,7 +72,6 @@ const Login = () => {
             </h1>
             <p className="mb-8 text-sm text-gray-500">
               Log in to continue to your dashboard.
-              {isAuthenticated}
             </p>
 
             <form onSubmit={handleLogin} className="flex flex-col gap-5">

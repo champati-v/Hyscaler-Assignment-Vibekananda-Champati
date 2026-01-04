@@ -21,22 +21,8 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path='/' 
-          element = {
-            <ProtectRoutes allowedRoles={['employee', 'manager']}>
-            <Login />
-            </ProtectRoutes>
-          } 
-        />
-
-        <Route path='/login' 
-          element = {
-            <ProtectRoutes allowedRoles={['employee', 'manager']}>
-            <Login />
-            </ProtectRoutes>
-          }
-        />
-
+        <Route path='/' element={<Login />} />
+        <Route path='/login' element={<Login />} />
         <Route path='/employee'
           element={
             <ProtectRoutes allowedRoles={['employee']}>

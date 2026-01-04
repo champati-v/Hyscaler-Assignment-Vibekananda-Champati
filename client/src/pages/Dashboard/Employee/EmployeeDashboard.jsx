@@ -1,4 +1,5 @@
 import Input from "../../../components/Input";
+import Button from "../../../components/Button";
 import { useAuth } from "../../../context/AuthContext";
 
 const EmployeeDashboard = () => {
@@ -14,10 +15,9 @@ const EmployeeDashboard = () => {
 
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">{user?.name}</span>
-          <button
-            onClick={logout}
-            className="text-sm text-indigo-600 hover:underline"
-          >
+          <button 
+            onClick={logout} 
+            className="bg-red-600 hover:bg-red-700 rounded-md px-4 py-2 text-sm font-medium text-white cursor-pointer">
             Logout
           </button>
         </div>
@@ -30,7 +30,7 @@ const EmployeeDashboard = () => {
             Leave Balances
           </h2>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 grid-cols-2">
             <div className="rounded-lg border bg-white p-4">
               <p className="text-sm text-gray-500">Vacation Leave</p>
               <p className="mt-2 text-2xl font-semibold text-gray-800">
@@ -59,7 +59,7 @@ const EmployeeDashboard = () => {
               <form className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <label className="text-sm text-gray-600">Leave Type <span className="text-red-500">*</span> </label>
-                  <select className="mt-1 w-full rounded-md border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 px-4 py-2 text-sm">
+                  <select className="w-full rounded-md border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 px-4 py-2 text-sm">
                     <option>Vacation</option>
                     <option>Sick</option>
                   </select>
