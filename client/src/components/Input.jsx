@@ -6,6 +6,7 @@ const Input = ({
   value,
   onChange,
   rightIcon,
+  min,
 }) => {
   return (
     <div className="flex flex-col gap-1">
@@ -15,6 +16,7 @@ const Input = ({
         <input
           type={type}
           required={required}
+          min={min}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
