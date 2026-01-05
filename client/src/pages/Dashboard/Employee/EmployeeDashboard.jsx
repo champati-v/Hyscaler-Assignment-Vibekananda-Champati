@@ -5,6 +5,7 @@ import Badge from "../../../components/Badge";
 import DateFormat from "../../../components/DateFormat";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import DatePicker from "react-datepicker";
 
 const EmployeeDashboard = () => {
   const { user, logout, token } = useAuth();
@@ -23,8 +24,29 @@ const EmployeeDashboard = () => {
     reason: "",
   });
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const formatDateLocal = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
+
+  const leaveDaysRequested = (new Date(leaveDetails.end_date) - new Date(leaveDetails.start_date)) / (1000 * 60 * 60 * 24) + 1;
+
+  const getDisabledDateRanges = (leaves) => {
+    return leaves
+      .filter(
+        (leave) => leave.status === "pending" || leave.status === "approved"
+      )
+      .map((leave) => ({
+        start: new Date(leave.start_date),
+        end: new Date(leave.end_date),
+      }));
+  };
+  const disabledDateRanges = getDisabledDateRanges(history);
 
   const requestLeave = async (e) => {
     e.preventDefault();
@@ -33,6 +55,19 @@ const EmployeeDashboard = () => {
 
     if (!leave_type || !start_date || !end_date) {
       alert("Please fill all the required values");
+      return;
+    }
+
+    if (
+      leave_type === "vacation" &&
+      leaveDaysRequested > balance.vacation_days
+    ) {
+      alert("Insufficient vacation days");
+      return;
+    }
+
+    if (leave_type === "sick" && leaveDaysRequested > balance.sick_days) {
+      alert("Insufficient sick days");
       return;
     }
 
@@ -56,7 +91,6 @@ const EmployeeDashboard = () => {
           reason: "",
         });
         getHistory();
-        getBalance();
       } else {
         alert("Error: " + (await response.json()).message);
         setLeaveDetails({
@@ -152,7 +186,11 @@ const EmployeeDashboard = () => {
             <div className="rounded-lg border bg-white p-4">
               <p className="text-sm text-gray-500">Vacation Leave</p>
               <p className="mt-2 text-2xl font-semibold text-gray-800">
-                {balanceLoading ? <Skeleton /> : `${balance.vacation_days} days`}
+                {balanceLoading ? (
+                  <Skeleton />
+                ) : (
+                  `${balance.vacation_days} days`
+                )}
               </p>
             </div>
 
@@ -198,37 +236,57 @@ const EmployeeDashboard = () => {
                   </select>
                 </div>
 
-                <div>
-                  <Input
-                    type="date"
-                    label="Start Date"
-                    min={today}
-                    required
-                    value={leaveDetails.start_date}
-                    onChange={(e) =>
+                <div className="flex flex-col">
+                   <label className="text-sm text-gray-600">
+                    Start Date <span className="text-red-500">*</span>{" "}
+                  </label>
+
+                  <DatePicker
+                    selected={
+                      leaveDetails.start_date
+                        ? new Date(leaveDetails.start_date)
+                        : null
+                    }
+                    onChange={(date) =>
                       setLeaveDetails({
                         ...leaveDetails,
-                        start_date: e.target.value,
+                        start_date: formatDateLocal(date),
+                        end_date: "", 
                       })
                     }
-                    disabled={leaveApplyLoading}
+                    minDate={today}
+                    excludeDateIntervals={disabledDateRanges}
+                    placeholderText="Select start date"
+                    className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
                   />
                 </div>
 
-                <div>
-                  <Input
-                    type="date"
-                    label="End Date"
-                    min={today}
-                    required
-                    value={leaveDetails.end_date}
-                    onChange={(e) =>
+                <div className="flex flex-col">
+
+                  <label className="text-sm text-gray-600">
+                    End Date <span className="text-red-500">*</span>{" "}
+                  </label>
+
+                  <DatePicker
+                    selected={
+                      leaveDetails.end_date
+                        ? new Date(leaveDetails.end_date)
+                        : null
+                    }
+                    onChange={(date) =>
                       setLeaveDetails({
                         ...leaveDetails,
-                        end_date: e.target.value,
+                        end_date: formatDateLocal(date),
                       })
                     }
-                    disabled={leaveApplyLoading}
+                    minDate={
+                      leaveDetails.start_date
+                        ? new Date(leaveDetails.start_date)
+                        : new Date()
+                    }
+                    excludeDateIntervals={disabledDateRanges}
+                    placeholderText="Select end date"
+                    className="w-full rounded-md border border-gray-300 px-4 py-2 text-sm"
                   />
                 </div>
 
@@ -267,23 +325,23 @@ const EmployeeDashboard = () => {
               My Leave History
             </h2>
 
-              <div className="flex flex-col rounded-lg border bg-white h-[360px]">
+            <div className="flex flex-col rounded-lg border bg-white h-[360px] overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-b bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Type</th>
+                    <th className="px-4 py-3 text-left">Dates</th>
+                    <th className="px-4 py-3 text-left">Reason</th>
+                    <th className="px-4 py-3 text-left">Status</th>
+                  </tr>
+                </thead>
+              </table>
 
+              <div className="flex-1 overflow-y-auto">
                 <table className="w-full text-sm">
-                  <thead className="border-b bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left">Type</th>
-                      <th className="px-4 py-3 text-left">Dates</th>
-                      <th className="px-4 py-3 text-left">Reason</th>
-                      <th className="px-4 py-3 text-left">Status</th>
-                    </tr>
-                  </thead>
-                </table>
-
-                <div className="flex-1 overflow-y-auto">
-                  <table className="w-full text-sm">
-                    <tbody>
-                      {history.length > 0 && history.map((leave) => (
+                  <tbody>
+                    {history.length > 0 &&
+                      history.map((leave) => (
                         <tr key={leave.id} className="border-b border-gray-400">
                           <td className="px-4 py-3 capitalize">
                             {leave.leave_type}
@@ -301,18 +359,25 @@ const EmployeeDashboard = () => {
                           </td>
                         </tr>
                       ))}
-                      {historyLoading && (
-                        <tr>
-                          <td colSpan="4" className="px-4 py-3 text-center"><Skeleton count={10} /></td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
+                    {historyLoading && (
+                      <tr>
+                        <td colSpan="4" className="px-4 py-3 text-center">
+                          <Skeleton count={10} />
+                        </td>
+                      </tr>
+                    )}
+                    {history.length === 0 && !historyLoading && (
+                      <tr>
+                        <td colSpan="4" className="px-4 py-3 text-center">
+                          No leave history found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
-
+          </div>
         </section>
       </main>
     </div>

@@ -4,6 +4,7 @@ import Badge from "../../../components/Badge";
 import DateFormat from "../../../components/DateFormat";
 import Input from "../../../components/Input";
 import Skeleton from "react-loading-skeleton";
+import LeaveCalendar from "../../../components/LeaveCalender";
 
 const ManagerDashboard = () => {
   const { user, token, logout } = useAuth();
@@ -16,6 +17,9 @@ const ManagerDashboard = () => {
 
   const pendingLeaves = allLeaves?.filter(
     (leave) => leave.status === "pending"
+  );
+  const approvedLeaves = allLeaves?.filter(
+    (leave) => leave.status === "approved"
   );
 
   useEffect(() => {
@@ -55,11 +59,11 @@ const ManagerDashboard = () => {
           status,
           manager_comment: comment,
         }),
-      }); 
+      });
 
       const data = await response.json();
 
-      if(response.status !== 200){
+      if (response.status !== 200) {
         alert("Action failed: " + data.message);
         return;
       }
@@ -93,15 +97,16 @@ const ManagerDashboard = () => {
         </div>
       </header>
 
-      <main className="p-6">
-        <div className="flex flex-col lg:flex-row items-start justify-between">
+      <main className="grid grid-cols-1 lg:grid-cols-2 items-center p-6">
+        <div className="flex flex-col items-start justify-between">
           {/* PENDING REQUESTS */}
           <section>
             <h2 className="mb-4 text-sm font-medium text-gray-700">
               Pending Leave Requests
             </h2>
 
-            <div className="rounded-lg border bg-white overflow-x-auto">
+            <div className="rounded-lg border bg-white lg:w-[630px] h-[250px] flex flex-col overflow-x-auto">
+      
               <table className="w-full text-sm">
                 <thead className="border-b bg-gray-50 text-left">
                   <tr>
@@ -112,82 +117,98 @@ const ManagerDashboard = () => {
                     <th className="px-4 py-3">Action</th>
                   </tr>
                 </thead>
+              </table>
 
-                <tbody>
-                  {pendingLeaves.length > 0 ? (
-                    pendingLeaves.map((leave) => (
-                      <tr key={leave.id} className="border-b flex-1">
-                        <td className="px-4 py-3">{leave.name}</td>
+              <div className="flex-1 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <tbody>
+                    {pendingLeaves.length > 0 ? (
+                      pendingLeaves.map((leave) => (
+                        <tr key={leave.id} className="border-b">
+                          <td className="px-4 py-3">{leave.name}</td>
 
-                        <td className="px-4 py-3">
-                          <DateFormat date={leave.start_date} /> –{" "}
-                          <DateFormat date={leave.end_date} />
-                        </td>
+                          <td className="px-4 py-3">
+                            <DateFormat date={leave.start_date} /> –{" "}
+                            <DateFormat date={leave.end_date} />
+                          </td>
 
-                        <td className="px-4 py-3">{leave.reason || "-"}</td>
+                          <td className="px-4 py-3">{leave.reason || "-"}</td>
 
-                        <td className="px-4 py-3">
-                          <Input
-                            type="text"
-                            placeholder="Optional"
-                            onChange={(e) => setComment(e.target.value)}
-                            className="w-full rounded-md border px-2 py-1 text-sm"
-                            disabled={approveRejectLoading}
-                          />
-                        </td>
+                          <td className="px-4 py-3">
+                            <Input
+                              type="text"
+                              placeholder="Optional"
+                              onChange={(e) => setComment(e.target.value)}
+                              className="w-full rounded-md border px-2 py-1 text-sm"
+                              disabled={approveRejectLoading}
+                            />
+                          </td>
 
-                        <td className="px-4 py-3 flex gap-2">
-                          <button
-                            disabled={actionLoading === leave.id}
-                            onClick={() => handleAction(leave.id, "approved")}
-                            className="rounded bg-green-600 px-4 py-2 text-xs text-white hover:bg-green-700 disabled:opacity-50"
-                          >
-                            { approveRejectLoading ? "Processing..." : "Approve" }
-                          </button>
+                          <td className="px-4 py-3">
+                            <div className="flex gap-2">
+                              <button
+                                disabled={actionLoading === leave.id}
+                                onClick={() =>
+                                  handleAction(leave.id, "approved")
+                                }
+                                className="rounded bg-green-600 px-4 py-2 text-xs text-white hover:bg-green-700 disabled:opacity-50"
+                              >
+                                {approveRejectLoading
+                                  ? "Processing..."
+                                  : "Approve"}
+                              </button>
 
-                          <button
-                            disabled={actionLoading === leave.id}
-                            onClick={() => handleAction(leave.id, "rejected")}
-                            className="rounded bg-red-600 px-3 py-1 text-xs text-white hover:bg-red-700 disabled:opacity-50"
-                          >
-                            { approveRejectLoading ? "Processing..." : "Reject" }
-                          </button>
+                              <button
+                                disabled={actionLoading === leave.id}
+                                onClick={() =>
+                                  handleAction(leave.id, "rejected")
+                                }
+                                className="rounded bg-red-600 px-3 py-2 text-xs text-white hover:bg-red-700 disabled:opacity-50"
+                              >
+                                {approveRejectLoading
+                                  ? "Processing..."
+                                  : "Reject"}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="5"
+                          className="px-4 py-6 text-center text-gray-500"
+                        >
+                          No pending leave requests
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan="5"
-                        className="px-4 py-6 text-center text-gray-500"
-                      >
-                        No pending leave requests
-                      </td>
-                    </tr>
-                  )}
-                  {leaveLoading && (
-                    <tr>
-                      <td colSpan="5" className="px-4 py-3 text-center">
-                        <Skeleton />
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+
+                    {leaveLoading && (
+                      <tr>
+                        <td colSpan="5" className="px-4 py-3 text-center">
+                          <Skeleton />
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
 
           {/* ALL LEAVES */}
           <section>
-            <h2 className="mb-4 text-sm font-medium text-gray-700">
+            <h2 className="mt-2 mb-4 text-sm font-medium text-gray-700">
               All Leave Requests
             </h2>
 
-            <div className="flex flex-col rounded-lg border bg-white w-full lg:w-[630px] h-[360px]">
+            <div className="flex flex-col rounded-lg border bg-white w-full lg:w-[630px] h-[250px] overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="border-b bg-gray-50">
                   <tr>
-                    <th className="px-4 py-3 text-left">Type</th>
+                    <th className="pl-4 py-3 text-left">Employee</th>
+                    <th className="py-3 text-left">Type</th>
                     <th className="px-4 py-3 text-left">Dates</th>
                     <th className="px-4 py-3 text-left">Reason</th>
                     <th className="px-4 py-3 text-left">Status</th>
@@ -201,6 +222,8 @@ const ManagerDashboard = () => {
                     {allLeaves.length > 0 &&
                       allLeaves.map((leave) => (
                         <tr key={leave.id} className="border-b border-gray-400">
+                          <td className="px-4 py-3">{leave.name}</td>
+
                           <td className="px-4 py-3 capitalize">
                             {leave.leave_type}
                           </td>
@@ -224,11 +247,25 @@ const ManagerDashboard = () => {
                         </td>
                       </tr>
                     )}
+                    {allLeaves.length === 0 && !leaveLoading && (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="px-4 py-6 text-center text-gray-500"
+                        >
+                          No leave requests found
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           </section>
+        </div>
+
+        <div>
+          <LeaveCalendar approvedLeaves={approvedLeaves} />
         </div>
       </main>
     </div>
